@@ -3,30 +3,6 @@
 
 # # Демо-версия автоматизированного и гарантированного обновления пользователя
 
-# В текущем jupyter-notebook хочу показать демо-версию программы, осуществляющей автоматизированное и гарантированное обновление пользователя. Ниже привожу описание постановки задачи, поставленной работодателем.
-
-# **Задача** - написать программу, производящую полностью автоматизированное и гарантированное обновление программного комплекса пользователя(ПКП).
-
-# Обновление ПКП делится на следующие составляющие:
-# 
-# - **Обновление баз данных**
-# 
-# - **Скачивание оперативных обновлений**
-# 
-# - **Обновление регистрационных файлов**
-# 
-# Скачиваемые файлы (базы данных, оперативные обновления, рег.файлы) находятся на ftp-сервере(sftp также поднят), к которому каждый клиент имеет доступ с определенными правами. Само скачивание осуществляется по SFTP(SSH File Transfer Protocol)-протоколу. Помимо обновления ПКП, в программе реализована следующие возможности, необходимые для работы программы:
-# 
-# - Очистка кеша
-# 
-# - Запуск/остановка службы
-# 
-# - Формирование файла-отчета
-# 
-# - Обработка флагов, выложенных на сервере
-# 
-# Поскольку цель текущей демо-версии - продемонстрировать сетевую составляющую проекта, то я решил оставить только модуль обновления баз данных без запуска/остановки службы, поскольку для демонстрации последнего необходимо будет установить программный комплекс.
-
 # ## Подключаем небходимые библиотеки и задаем параметры конфигурации
 
 # In[1]:
@@ -55,7 +31,6 @@ import requests
 
 
 # Отключаем лишние логи, которые возникают из-за использования paramiko.
-# https://stackoverflow.com/questions/8144545/turning-off-logging-in-paramiko
 logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 
@@ -65,13 +40,9 @@ logging.getLogger("paramiko").setLevel(logging.WARNING)
 # Путь к файлу с конфигами
 # Те переменные, которые часто используются в коде и не должны изменять своего значения, я назвал, используя
 # заглавные буквы. Например, CUR_DIR
-# Чтобы crontab корректно работал, нужно указать полный путь до файла конфигураций.
-# https://stackoverflow.com/questions/1432924/python-change-the-scripts-working-directory-to-the-scripts-own-directory
 
-# https://stackoverflow.com/questions/39125532/file-does-not-exist-in-jupyter-notebook
 abspath = os.path.abspath(__file__)
 CUR_DIR = os.path.dirname(abspath)
-#CUR_DIR = os.path.abspath('')
 os.chdir(CUR_DIR)
 
 PATH_TO_CONFIG = 'Config.ini'
@@ -102,7 +73,7 @@ PATH_TO_DOWNLOAD = read_config.get('Information', 'path_to_download_files_from_s
 # Название скачиваемого xml файла
 XML_NAME = read_config.get('Information', 'xml_name')
 
-# Путь к скачиваемому xml файлу
+# Путь к скачиваемому xml файлу на сервере
 XML_PATH = '/' + CLIENT_NAME.upper() + '/FILESLISTS/'
 
 # Путь к папке FlagsList
@@ -119,7 +90,6 @@ PATH_TO_SERVER_LOGS = '/' + CLIENT_NAME.upper() + '/LOGS/'
 
 
 # Функция, находящая hash файла
-# https://stackoverflow.com/questions/3431825/generating-an-md5-checksum-of-a-file
 def md5(fname):
     hash_md5 = hashlib.md5()
     with open(fname, "rb") as f:
@@ -131,8 +101,10 @@ def md5(fname):
 # In[5]:
 
 
+# Если соединения с ftp-сервером нет, то при инициализации соединения выпадет исключение и исполнение программы
+# прервется. Поэтому, чтобы исполнение программы не прервалось, сделан цикл while пока соединение с сервером не 
+# восстановится
 retry = True
-
 while (retry):
     
     try:
@@ -167,6 +139,8 @@ while (retry):
 # - Отправка отчета
 
 # Каждый модуль характеризуется своим флагом, который выложен на ftp-сервере. Если этот флаг есть - значит, соответствующий модуль нужно сделать. Иначе - модуль делать не нужно. По окончании каждого модуля соответствующий флаг удаляется. 
+# 
+# В демо-версии только один модуль - обновление баз данных.
 
 # In[6]:
 
@@ -187,7 +161,6 @@ class Checker:
     def check_flag(self, sftp):
 
         # Проходимся по содержимому папки FLAGS
-        # https://stackoverflow.com/questions/12295551/how-to-list-all-the-folders-and-files-in-the-directory-after-connecting-through
         for entry in sftp.listdir_attr(PATH_TO_FLAG):
             mode = entry.st_mode
             
@@ -252,11 +225,10 @@ def download_one_file(download_file, folder_in_server):
 
 def check_space(files_to_download):
     
-    # Задача функции - узнать объем файлов, который нужно докачать для обновления ПКП.
+    # Задача функции - узнать объем файлов, который нужно докачать для обновления. 
     # Идея алгоритма функции - пройтись по списку скачиваемых файлов и узнать, сколько файлов уже корректно скачаны.
     # Функция, узнав, какие файлы скачаны корректно, а какие - нет, определяет какой объем файлов еще нужно
     # докачать.
-    # ПРИМЕЧАНИЕ: в комментах к текущей ячейке слова "корректно скачан" == "полностью скачан"
     
     logger.info("Началась проверка свободного места на диске")
     disk_free_space_needed = 0
@@ -340,7 +312,7 @@ def check_md5(path_to_files, files_to_download):
     # Проходимся в цикле по списку скачиваемых файлов и проверяем их md5
     for pos, download_file in enumerate(files_to_download):
 
-        # извлекаем имя файла
+        # Извлекаем имя файла
         download_file_name = download_file.attrib['Name']
         
         full_name = os.path.join(path_to_files, download_file_name)
@@ -419,13 +391,6 @@ def download_all_files(files_to_download, are_files_correct):
 # In[ ]:
 
 
-# Перед началом работы удаляем все файлы из папки Temp
-# delete_files_from_directory('Temp')
-
-
-# In[ ]:
-
-
 ############################################### Формируем лог-файл ###############################################
 
 # Формируем имя для лога
@@ -439,9 +404,6 @@ minute = '{:02d}'.format(dt.minute)
 LOG_NAME = "Logs_{}_{}_{}_{}_{}.txt".format(year, month, day, hour, minute)
 
 # Задаем конфигурации для формирования файла логов
-# Про конфигурации:
-# https://stackoverflow.com/questions/6386698/how-to-write-to-a-file-using-the-logging-python-module
-# https://docs.python.org/2/howto/logging.html#logging-basic-tutorial
 logging.basicConfig(filename=os.path.join(PATH_TO_LOG,LOG_NAME),
                     filemode = 'a',
                     level=logging.DEBUG,
@@ -504,9 +466,6 @@ def main():
 
     # Закрываем канал связи
     transport.close()
-
-    # Удаляем все файлы из папки Temp
-    # delete_files_from_directory('Temp')
 
 
 # In[ ]:
