@@ -44,7 +44,7 @@
 
 #### Linux
 1. python -m venv path_to_py_folder - создаем виртуальное окружение в папке со скриптом path_to_py_folder
-2. source path_to_py_folder -       активируем созданное виртуальное окружение
+2. source path_to_py_folder/bin/activate -       активируем созданное виртуальное окружение
 3. pip install -r  path_to_py_folder/requirements.txt - устаналвиваем в виртуальное окружение необходимые библиотеки для работы скрипта
 4. deactivate - деактивируем созданное виртуальное окружение
 
@@ -62,7 +62,7 @@
 3. path_to_py_folder\Scripts\deactivate.bat
 
 ### Linux
-1. source path_to_py_folder
+1. source path_to_py_folder/bin/activate
 2. python path_to_py_folder/DTE_Demo.py
 3. deactivate
     
