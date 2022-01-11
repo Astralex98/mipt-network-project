@@ -51,18 +51,19 @@ path_to_py_folder - это полный путь к папке mipt-network-proj
 
 ## Использование
 
+### Файл Config.ini
 В конфигурационном файле Config.ini нужно указать следующие параметры:
 1. path_to_download_files_from_server - путь к папке, куда будут скачиваться базы данных.
 2. logs - путь к папке, где будут сохраняться логи
 
-Далее нужно активировать виртуальное окружение и запустить файл DTE_Demo.py
+### Запуск файла DTE_Demo.py в виртуальном окружении
 
-### Windows
+#### Windows
 1. path_to_py_folder\Scripts\activate.bat
 2. python path_to_py_folder\DTE_Demo.py
 3. path_to_py_folder\Scripts\deactivate.bat
 
-### Linux
+#### Linux
 1. source path_to_py_folder/bin/activate
 2. python path_to_py_folder/DTE_Demo.py
 3. deactivate
