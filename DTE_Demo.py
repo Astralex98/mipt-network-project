@@ -171,20 +171,6 @@ class Checker:
         self.check_flag(sftp)
 
 
-# In[7]:
-
-
-# Функция по удалению файлов из некоторой папки
-def delete_files_from_directory(path_to_directory):
-    
-    # Находим список файлов в заданной папке
-    dir_files = [f for f in os.listdir(path_to_directory) if os.path.isfile(os.path.join(path_to_directory, f))]
-    
-    # Удаляем файлы из папки 
-    for f in dir_files:
-        os.remove(os.path.join(path_to_directory,f))
-
-
 # ### 2. Скачивание баз данных
 
 # #### 2.1. Функция скачивания одного файла с сервера
