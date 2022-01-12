@@ -79,8 +79,10 @@ XML_PATH = '/' + CLIENT_NAME.upper() + '/FILESLISTS/'
 # Путь к папке FlagsList
 PATH_TO_FLAG = '/' + CLIENT_NAME.upper() + '/FLAGS'
 
-# Путь к файлу с логами
+# Путь к файлу с логами. Тут же проверяем, создана ли папка с именем PATH_TO_LOG
 PATH_TO_LOG = read_config.get('Information', 'logs')
+if (os.path.isdir(PATH_TO_LOG) == False):
+    os.mkdir(PATH_TO_LOG)
 
 # Путь к папке на серверной части, куда нужно отправлять логи
 PATH_TO_SERVER_LOGS = '/' + CLIENT_NAME.upper() + '/LOGS/'
@@ -151,10 +153,6 @@ class Checker:
         
         # Нужно ли начинать обновление?
         self.do_we_need_update_data_base = False
-        
-        # Сохраняем путь к папке Temp, где будут храниться временные файлы (например, логи)
-        tmp_directory='Temp'
-        self.tmp_path = os.path.join(CUR_DIR, tmp_directory)
     
     # Проверяем наличие флага в соответствующей папке FLAGS.
     # Если флаг есть, то соответствующий модуль еще не выполнен
@@ -285,7 +283,7 @@ def check_space(files_to_download):
         logger.error(mes)
         
         # Отправляем лог-файл на сервер
-        old_logs_path = os.path.join("Temp", LOG_NAME)
+        old_logs_path = os.path.join(PATH_TO_LOG, LOG_NAME)
         new_logs_path = PATH_TO_SERVER_LOGS + LOG_NAME
         sftp.put(old_logs_path, new_logs_path)
         sys.exit(1)
@@ -325,7 +323,7 @@ def check_md5(path_to_files, files_to_download):
             mes = "Md5 файла {} не совпадает с md5 в xml-файле!".format(download_file_name)
             logger.error(mes)
             
-            old_logs_path = os.path.join("Temp", LOG_NAME)
+            old_logs_path = os.path.join(PATH_TO_LOG, LOG_NAME)
             new_logs_path = PATH_TO_SERVER_LOGS + LOG_NAME
             sftp.put(old_logs_path, new_logs_path)
             sys.exit(1)
@@ -458,11 +456,16 @@ def main():
 
         logger.info("Скачивание и установка баз данных завершены успешно!")
 
-        # Записываем в лог информацию о конце работы программы
+    # Записываем в лог информацию о конце работы программы
     logger.info("Конец работы программы")
 
     # Закрываем файл с логами
     logging.shutdown()
+    
+    # Отправляем файл с логами в соответствующую папку на сервере
+    old_logs_path = os.path.join(PATH_TO_LOG, LOG_NAME)
+    new_logs_path = PATH_TO_SERVER_LOGS + LOG_NAME
+    sftp.put(old_logs_path, new_logs_path)
 
     # Закрываем канал связи
     transport.close()
@@ -478,7 +481,7 @@ except Exception as e:
     logging.exception(e)
     
     # Формируем лог и отправляем его на сервер
-    old_logs_path = os.path.join("Temp", LOG_NAME)
+    old_logs_path = os.path.join(PATH_TO_LOG, LOG_NAME)
     new_logs_path = PATH_TO_SERVER_LOGS + LOG_NAME
     sftp.put(old_logs_path, new_logs_path)
 
