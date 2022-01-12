@@ -41,7 +41,7 @@ path_to_py_folder - это полный путь к папке mipt-network-proj
 1. python -m venv path_to_py_folder - создаем виртуальное окружение в папке path_to_py_folder
 2. path_to_py_folder\Scripts\activate - активируем созданное виртуальное окружение
 3. pip install -r path_to_py_folder\requirements.txt - устаналвиваем в виртуальное окружение необходимые библиотеки для работы скрипта
-4. path_to_py_folder\Scripts\deactivate - деактивируем созданное виртуальное окружение
+4. path_to_py_folder\Scripts\deactivate.bat - деактивируем созданное виртуальное окружение
 
 #### Linux
 1. python -m venv path_to_py_folder - создаем виртуальное окружение в папке path_to_py_folder
